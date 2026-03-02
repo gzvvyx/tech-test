@@ -40,5 +40,14 @@ namespace OrderService.WebAPI.Controllers
                 return NotFound();
             }
         }
+        
+        [HttpGet("failed")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetOrdersFailed()
+        {
+            var orders = await _orderService.GetOrdersFailedAsync();
+            return Ok(orders);
+        }
+        
     }
 }
