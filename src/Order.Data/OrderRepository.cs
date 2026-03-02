@@ -39,6 +39,30 @@ namespace Order.Data
             return orders;
         }
 
+        public async Task<IEnumerable<OrderSummary>> GetOrdersFailedAsync()
+        {
+            var orders = await _orderContext.Order
+                .Where(x => x.Status.Name == "Failed")
+                .Include(x => x.Items)
+                .Include(x => x.Status)
+                .Select(x => new OrderSummary
+                {
+                    Id = new Guid(x.Id),
+                    ResellerId = new Guid(x.ResellerId),
+                    CustomerId = new Guid(x.CustomerId),
+                    StatusId = new Guid(x.StatusId),
+                    StatusName = x.Status.Name,
+                    ItemCount = x.Items.Count,
+                    TotalCost = x.Items.Sum(i => i.Quantity * i.Product.UnitCost).Value,
+                    TotalPrice = x.Items.Sum(i => i.Quantity * i.Product.UnitPrice).Value,
+                    CreatedDate = x.CreatedDate
+                })
+                .OrderByDescending(x => x.CreatedDate)
+                .ToListAsync();
+            
+            return orders;
+        }
+
         public async Task<OrderDetail> GetOrderByIdAsync(Guid orderId)
         {
             var orderIdBytes = orderId.ToByteArray();
