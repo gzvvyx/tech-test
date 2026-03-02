@@ -48,6 +48,27 @@ namespace OrderService.WebAPI.Controllers
             var orders = await _orderService.GetOrdersFailedAsync();
             return Ok(orders);
         }
-        
+
+        [HttpPost("{orderId}/{newStatus}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UpdateOrderStatus(Guid orderId, string newStatus)
+        {
+            if (string.IsNullOrWhiteSpace(newStatus))
+            {
+                return BadRequest("Status cannot be empty");
+            }
+            
+            var order = await _orderService.UpdateOrderStatusAsync(orderId, newStatus);
+            if (order != null)
+            {
+                return Ok(order);
+            }
+            else
+            {
+                return NotFound();
+            }
+        }
     }
 }
