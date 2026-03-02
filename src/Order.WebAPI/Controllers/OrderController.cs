@@ -33,64 +33,48 @@ namespace Order.WebAPI.Controllers
         public async Task<IActionResult> GetOrderById(Guid orderId)
         {
             var order = await _orderService.GetOrderByIdAsync(orderId);
-            if (order != null)
-            {
-                return Ok(order);
-            }
-            else
-            {
-                return NotFound();
-            }
+            if (order is null) return NotFound();
+
+            return Ok(order);
         }
         
         [HttpGet("{status}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> GetOrdersFailed(StatusFilter status)
+        public async Task<IActionResult> GetOrdersByStatus(StatusFilter status)
         {
             var validator = new StatusValidator();
             var validationResult = await validator.ValidateAsync(status);
-            if (!validationResult.IsValid)
-            {
-                return BadRequest();
-            }
+            if (!validationResult.IsValid) return BadRequest();
             
             var orders = await _orderService.GetOrdersByStatusAsync(status);
             return Ok(orders);
         }
 
-        [HttpPost("{orderId}/{newStatus}")]
+        [HttpPatch("{orderId}/{newStatus}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> UpdateOrderStatusAsync([FromBody] UpdateOrderRequest request)
+        public async Task<IActionResult> UpdateOrderStatus([FromBody] UpdateOrderRequest request)
         {
             var validator = new UpdateOrderRequestValidator();
             var validationResult = await validator.ValidateAsync(request);
-            if (!validationResult.IsValid)
-            {
-                return BadRequest();
-            }
+            if (!validationResult.IsValid) return BadRequest();
             
             var order = await _orderService.UpdateOrderStatusAsync(request);
-            if (order is null)
-            {
-                return NotFound();
-            }
+            if (order is null) return NotFound();
+            
             return Ok(order);
         }
 
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> CreateOder([FromBody] CreateOrderRequest request)
+        public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequest request)
         {
             var validator = new CreateOrderRequestValidator();
             var validationResult = await validator.ValidateAsync(request);
-            if (!validationResult.IsValid)
-            {
-                return BadRequest();
-            }
+            if (!validationResult.IsValid) return BadRequest();
             
             var response = await _orderService.CreateOrderAsync(request);
             return Ok(response);

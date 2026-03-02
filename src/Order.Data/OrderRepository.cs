@@ -20,8 +20,6 @@ namespace Order.Data
         public async Task<IEnumerable<OrderSummary>> GetOrdersAsync()
         {
             var orders = await _orderContext.Order
-                .Include(x => x.Items)
-                .Include(x => x.Status)
                 .Select(x => new OrderSummary
                 {
                     Id = new Guid(x.Id),
@@ -30,8 +28,8 @@ namespace Order.Data
                     StatusId = new Guid(x.StatusId),
                     StatusName = x.Status.Name,
                     ItemCount = x.Items.Count,
-                    TotalCost = x.Items.Sum(i => i.Quantity * i.Product.UnitCost).Value,
-                    TotalPrice = x.Items.Sum(i => i.Quantity * i.Product.UnitPrice).Value,
+                    TotalCost = x.Items.Sum(i => (decimal?)i.Quantity * i.Product.UnitCost).Value,
+                    TotalPrice = x.Items.Sum(i => (decimal?)i.Quantity * i.Product.UnitPrice).Value,
                     CreatedDate = x.CreatedDate
                 })
                 .OrderByDescending(x => x.CreatedDate)
@@ -43,9 +41,7 @@ namespace Order.Data
         public async Task<IEnumerable<OrderSummary>> GetOrdersByStatusAsync(string status)
         {
             var orders = await _orderContext.Order
-                .Where(x => x.Status.Name == status)
-                .Include(x => x.Items)
-                .Include(x => x.Status)
+                .Where(x => Equals(x.Status.Name, status))
                 .Select(x => new OrderSummary
                 {
                     Id = new Guid(x.Id),
@@ -54,8 +50,8 @@ namespace Order.Data
                     StatusId = new Guid(x.StatusId),
                     StatusName = x.Status.Name,
                     ItemCount = x.Items.Count,
-                    TotalCost = x.Items.Sum(i => i.Quantity * i.Product.UnitCost).Value,
-                    TotalPrice = x.Items.Sum(i => i.Quantity * i.Product.UnitPrice).Value,
+                    TotalCost = x.Items.Sum(i => (decimal?)i.Quantity * i.Product.UnitCost).Value,
+                    TotalPrice = x.Items.Sum(i => (decimal?)i.Quantity * i.Product.UnitPrice).Value,
                     CreatedDate = x.CreatedDate
                 })
                 .OrderByDescending(x => x.CreatedDate)
@@ -105,18 +101,12 @@ namespace Order.Data
 
             var order = await _orderContext.Order
                 .Include(x => x.Status)
-                .FirstOrDefaultAsync(x =>
-                    _orderContext.Database.IsInMemory() ? x.Id.SequenceEqual(orderIdBytes) : x.Id == orderIdBytes);
+                .FirstOrDefaultAsync(x => x.Id.SequenceEqual(orderIdBytes));
 
-            if (order == null)
-            {
-                return null;
-            }
+            if (order == null) return null;
 
             if (order.Status?.Name == newStatusName)
-            {
                 return await GetOrderByIdAsync(orderId);
-            }
             
             var existingStatus = await _orderContext.OrderStatus
                 .FirstOrDefaultAsync(x => x.Name == newStatusName);
@@ -159,25 +149,19 @@ namespace Order.Data
 
         public async Task<IEnumerable<MonthlyProfit>> CalculateProfitByMonthAsync()
         {
-            var orders = await _orderContext.Order
+            var profit = await _orderContext.Order
                 .Where(x => x.Status.Name == "Completed")
-                .Select(x => new
-                {
-                    x.CreatedDate,
-                    TotalCost = x.Items.Sum(i => (decimal?)i.Quantity * i.Product.UnitCost) ?? 0,
-                    TotalPrice = x.Items.Sum(i => (decimal?)i.Quantity * i.Product.UnitPrice) ?? 0
-                })
-                .ToListAsync();
-
-            var profit = orders
                 .GroupBy(x => new { x.CreatedDate.Year, x.CreatedDate.Month })
                 .Select(g => new MonthlyProfit
                 {
                     Year = g.Key.Year,
                     Month = g.Key.Month,
-                    Profit = g.Sum(x => x.TotalPrice) - g.Sum(x => x.TotalCost),
-                }).OrderBy(x => x.Year)
-                .ThenBy(x => x.Month);
+                    Profit = g.Sum(x => x.Items.Sum(i => (decimal?)i.Quantity * i.Product.UnitPrice) ?? 0)
+                             - g.Sum(x => x.Items.Sum(i => (decimal?)i.Quantity * i.Product.UnitCost) ?? 0)
+                })
+                .OrderBy(x => x.Year)
+                .ThenBy(x => x.Month)
+                .ToListAsync();
 
             return profit;
         }
