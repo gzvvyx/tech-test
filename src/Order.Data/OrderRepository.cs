@@ -40,10 +40,10 @@ namespace Order.Data
             return orders;
         }
 
-        public async Task<IEnumerable<OrderSummary>> GetOrdersFailedAsync()
+        public async Task<IEnumerable<OrderSummary>> GetOrdersByStatusAsync(string status)
         {
             var orders = await _orderContext.Order
-                .Where(x => x.Status.Name == "Failed")
+                .Where(x => x.Status.Name == status)
                 .Include(x => x.Items)
                 .Include(x => x.Status)
                 .Select(x => new OrderSummary
@@ -142,6 +142,44 @@ namespace Order.Data
             await _orderContext.SaveChangesAsync();
             
             return await GetOrderByIdAsync(orderId);
+        }
+
+        public async Task<OrderStatus> GetCreatedStatusAsync()
+        {
+            var status = await _orderContext.OrderStatus.FirstOrDefaultAsync(x => Equals(x.Name, "Created"));
+            return status;
+        }
+
+        public async Task CreateOrderAsync(Order.Data.Entities.Order order)
+        {
+            _orderContext.Order.Add(order);
+            
+            await _orderContext.SaveChangesAsync();
+        }
+
+        public async Task<IEnumerable<MonthlyProfit>> CalculateProfitByMonthAsync()
+        {
+            var orders = await _orderContext.Order
+                .Where(x => x.Status.Name == "Completed")
+                .Select(x => new
+                {
+                    x.CreatedDate,
+                    TotalCost = x.Items.Sum(i => (decimal?)i.Quantity * i.Product.UnitCost) ?? 0,
+                    TotalPrice = x.Items.Sum(i => (decimal?)i.Quantity * i.Product.UnitPrice) ?? 0
+                })
+                .ToListAsync();
+
+            var profit = orders
+                .GroupBy(x => new { x.CreatedDate.Year, x.CreatedDate.Month })
+                .Select(g => new MonthlyProfit
+                {
+                    Year = g.Key.Year,
+                    Month = g.Key.Month,
+                    Profit = g.Sum(x => x.TotalPrice) - g.Sum(x => x.TotalCost),
+                }).OrderBy(x => x.Year)
+                .ThenBy(x => x.Month);
+
+            return profit;
         }
     }
 }

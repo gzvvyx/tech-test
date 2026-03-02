@@ -2,8 +2,9 @@
 using Order.Model;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
-using Order.Data.Entities;
+using Order.Model.DTO;
 
 namespace Order.Service
 {
@@ -28,16 +29,50 @@ namespace Order.Service
             return order;
         }
 
-        public async Task<IEnumerable<OrderSummary>> GetOrdersFailedAsync()
+        public async Task<IEnumerable<OrderSummary>> GetOrdersByStatusAsync(StatusFilter status)
         {
-            var orders = await _orderRepository.GetOrdersFailedAsync();
+            var orders = await _orderRepository.GetOrdersByStatusAsync(status.ToString());
             return orders;
         }
 
-        public async Task<OrderDetail> UpdateOrderStatusAsync(Guid orderId, string newStatus)
+        public async Task<OrderDetail> UpdateOrderStatusAsync(UpdateOrderRequest request)
         {
-            var order = await _orderRepository.UpdateOrderStatusAsync(orderId, newStatus);
+            var order = await _orderRepository.UpdateOrderStatusAsync(request.Id, request.Status.ToString());
             return order;
+        }
+
+        public async Task<OrderDetail> CreateOrderAsync(CreateOrderRequest request)
+        {
+            var createdStatus = await _orderRepository.GetCreatedStatusAsync();
+            
+            var orderId = Guid.NewGuid();
+
+            var order = new Data.Entities.Order
+            {
+                Id = orderId.ToByteArray(),
+                ResellerId = request.ResellerId.ToByteArray(),
+                CustomerId = request.CustomerId.ToByteArray(),
+                StatusId = createdStatus.Id,
+                CreatedDate = DateTime.UtcNow,
+                Status = createdStatus,
+                Items = request.OrderItems.Select(i => new Data.Entities.OrderItem
+                {
+                    Id = Guid.NewGuid().ToByteArray(),
+                    ProductId = i.ProductId.ToByteArray(),
+                    ServiceId =  i.ServiceId.ToByteArray(),
+                    OrderId = orderId.ToByteArray(),
+                    Quantity = i.Quantity
+                }).ToHashSet()
+            };
+            
+            await _orderRepository.CreateOrderAsync(order);
+
+            return await _orderRepository.GetOrderByIdAsync(orderId);
+        }
+
+        public async Task<IEnumerable<MonthlyProfit>> CalculateProfitByMonthAsync()
+        {
+            return await _orderRepository.CalculateProfitByMonthAsync();
         }
     }
 }
