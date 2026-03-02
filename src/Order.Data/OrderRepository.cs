@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Order.Data.Entities;
 
 namespace Order.Data
 {
@@ -96,6 +97,51 @@ namespace Order.Data
                 }).SingleOrDefaultAsync();
             
             return order;
+        }
+
+        public async Task<OrderDetail> UpdateOrderStatusAsync(Guid orderId, string newStatusName)
+        {
+            var orderIdBytes = orderId.ToByteArray();
+
+            var order = await _orderContext.Order
+                .Include(x => x.Status)
+                .FirstOrDefaultAsync(x =>
+                    _orderContext.Database.IsInMemory() ? x.Id.SequenceEqual(orderIdBytes) : x.Id == orderIdBytes);
+
+            if (order == null)
+            {
+                return null;
+            }
+
+            if (order.Status?.Name == newStatusName)
+            {
+                return await GetOrderByIdAsync(orderId);
+            }
+            
+            var existingStatus = await _orderContext.OrderStatus
+                .FirstOrDefaultAsync(x => x.Name == newStatusName);
+
+            if (existingStatus != null)
+            {
+                order.StatusId = existingStatus.Id;
+                order.Status =  existingStatus;
+            }
+            else
+            {
+                var newStatus = new OrderStatus
+                {
+                    Id = Guid.NewGuid().ToByteArray(),
+                    Name = newStatusName
+                };
+                _orderContext.OrderStatus.Add(newStatus);
+                
+                order.StatusId = newStatus.Id;
+                order.Status = newStatus;
+            }
+            
+            await _orderContext.SaveChangesAsync();
+            
+            return await GetOrderByIdAsync(orderId);
         }
     }
 }
