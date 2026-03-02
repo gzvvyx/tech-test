@@ -3,8 +3,10 @@ using Microsoft.AspNetCore.Mvc;
 using Order.Service;
 using System;
 using System.Threading.Tasks;
+using Order.Model.DTO;
+using Order.WebAPI.Validators;
 
-namespace OrderService.WebAPI.Controllers
+namespace Order.WebAPI.Controllers
 {
     [ApiController]
     [Route("orders")]
@@ -41,11 +43,19 @@ namespace OrderService.WebAPI.Controllers
             }
         }
         
-        [HttpGet("failed")]
+        [HttpGet("{status}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<IActionResult> GetOrdersFailed()
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> GetOrdersFailed(StatusFilter status)
         {
-            var orders = await _orderService.GetOrdersFailedAsync();
+            var validator = new StatusValidator();
+            var validationResult = await validator.ValidateAsync(status);
+            if (!validationResult.IsValid)
+            {
+                return BadRequest();
+            }
+            
+            var orders = await _orderService.GetOrdersByStatusAsync(status);
             return Ok(orders);
         }
 
@@ -53,22 +63,45 @@ namespace OrderService.WebAPI.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> UpdateOrderStatus(Guid orderId, string newStatus)
+        public async Task<IActionResult> UpdateOrderStatusAsync([FromBody] UpdateOrderRequest request)
         {
-            if (string.IsNullOrWhiteSpace(newStatus))
+            var validator = new UpdateOrderRequestValidator();
+            var validationResult = await validator.ValidateAsync(request);
+            if (!validationResult.IsValid)
             {
-                return BadRequest("Status cannot be empty");
+                return BadRequest();
             }
             
-            var order = await _orderService.UpdateOrderStatusAsync(orderId, newStatus);
-            if (order != null)
-            {
-                return Ok(order);
-            }
-            else
+            var order = await _orderService.UpdateOrderStatusAsync(request);
+            if (order is null)
             {
                 return NotFound();
             }
+            return Ok(order);
+        }
+
+        [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> CreateOder([FromBody] CreateOrderRequest request)
+        {
+            var validator = new CreateOrderRequestValidator();
+            var validationResult = await validator.ValidateAsync(request);
+            if (!validationResult.IsValid)
+            {
+                return BadRequest();
+            }
+            
+            var response = await _orderService.CreateOrderAsync(request);
+            return Ok(response);
+        }
+
+        [HttpGet("profit")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetProfit()
+        {
+            var profit = await _orderService.CalculateProfitByMonthAsync();
+            return Ok(profit);
         }
     }
 }
