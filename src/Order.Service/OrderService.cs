@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Order.Model.DTO;
+using Order.Model.DTO.Extensions;
 
 namespace Order.Service
 {
@@ -37,7 +38,7 @@ namespace Order.Service
 
         public async Task<OrderDetail> UpdateOrderStatusAsync(UpdateOrderRequest request)
         {
-            var order = await _orderRepository.UpdateOrderStatusAsync(request.Id, request.Status.ToString());
+            var order = await _orderRepository.UpdateOrderStatusAsync(request.Id, request.Status.Status.ToStatusName());
             return order;
         }
 
