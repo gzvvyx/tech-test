@@ -42,7 +42,7 @@ namespace Order.Service
             return order;
         }
 
-        public async Task<OrderDetail> CreateOrderAsync(CreateOrderRequest request)
+        public async Task<OrderDetail> CreateOrderAsync(CreateOrderDto dto)
         {
             var createdStatus = await _orderRepository.GetCreatedStatusAsync();
             
@@ -51,12 +51,12 @@ namespace Order.Service
             var order = new Data.Entities.Order
             {
                 Id = orderId.ToByteArray(),
-                ResellerId = request.ResellerId.ToByteArray(),
-                CustomerId = request.CustomerId.ToByteArray(),
+                ResellerId = dto.ResellerId.ToByteArray(),
+                CustomerId = dto.CustomerId.ToByteArray(),
                 StatusId = createdStatus.Id,
                 CreatedDate = DateTime.UtcNow,
                 Status = createdStatus,
-                Items = request.OrderItems.Select(i => new Data.Entities.OrderItem
+                Items = dto.OrderItems.Select(i => new Data.Entities.OrderItem
                 {
                     Id = Guid.NewGuid().ToByteArray(),
                     ProductId = i.ProductId.ToByteArray(),

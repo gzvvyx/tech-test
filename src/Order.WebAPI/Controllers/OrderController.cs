@@ -63,13 +63,13 @@ namespace Order.WebAPI.Controllers
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> CreateOrder([FromBody] CreateOrderRequest request)
+        public async Task<IActionResult> CreateOrder([FromBody] CreateOrderDto dto)
         {
             var validator = new CreateOrderRequestValidator();
-            var validationResult = await validator.ValidateAsync(request);
+            var validationResult = await validator.ValidateAsync(dto);
             if (!validationResult.IsValid) return BadRequest();
             
-            var response = await _orderService.CreateOrderAsync(request);
+            var response = await _orderService.CreateOrderAsync(dto);
             return Ok(response);
         }
 

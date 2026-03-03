@@ -12,7 +12,7 @@ namespace Order.Service
         Task<IEnumerable<OrderSummary>> GetOrdersByStatusAsync(OrderStatus status);
         Task<OrderDetail> GetOrderByIdAsync(Guid orderId);
         Task<OrderDetail> UpdateOrderStatusAsync(Guid orderId, OrderStatus status);
-        Task<OrderDetail> CreateOrderAsync(CreateOrderRequest request);
+        Task<OrderDetail> CreateOrderAsync(CreateOrderDto dto);
         Task<IEnumerable<MonthlyProfit>> CalculateProfitByMonthAsync();
     }
 }

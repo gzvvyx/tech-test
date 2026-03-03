@@ -330,15 +330,15 @@ namespace Order.Service.Tests
             await orderContext.SaveChangesAsync();
         }
         
-        private CreateOrderRequest BuildCreateOrderRequest(Guid? resellerId = null, int quantity = 1)
+        private CreateOrderDto BuildCreateOrderRequest(Guid? resellerId = null, int quantity = 1)
         {
-            return new CreateOrderRequest
+            return new CreateOrderDto
             {
                 ResellerId = resellerId ?? Guid.NewGuid(),
                 CustomerId = Guid.NewGuid(),
-                OrderItems = new List<CreateOrderItemRequest>
+                OrderItems = new List<CreateOrderItemDto>
                 {
-                    new CreateOrderItemRequest
+                    new CreateOrderItemDto
                     {
                         ProductId = new Guid(_orderProductEmailId),
                         ServiceId = new Guid(_orderServiceEmailId),

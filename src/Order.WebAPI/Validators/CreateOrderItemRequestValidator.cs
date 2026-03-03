@@ -3,7 +3,7 @@ using Order.Model.DTO;
 
 namespace Order.WebAPI.Validators;
 
-public class CreateOrderItemRequestValidator : AbstractValidator<CreateOrderItemRequest>
+public class CreateOrderItemRequestValidator : AbstractValidator<CreateOrderItemDto>
 {
     public CreateOrderItemRequestValidator()
     {
