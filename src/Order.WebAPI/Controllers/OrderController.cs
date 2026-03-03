@@ -27,10 +27,10 @@ namespace Order.WebAPI.Controllers
             return Ok(orders);
         }
 
-        [HttpGet("{orderId}")]
+        [HttpGet("{orderId:guid}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetOrderById(Guid orderId)
+        public async Task<IActionResult> GetOrderById([FromRoute] Guid orderId)
         {
             var order = await _orderService.GetOrderByIdAsync(orderId);
             if (order is null) return NotFound();
@@ -41,27 +41,19 @@ namespace Order.WebAPI.Controllers
         [HttpGet("{status}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> GetOrdersByStatus(StatusFilter status)
+        public async Task<IActionResult> GetOrdersByStatus([FromRoute] Model.OrderStatus status)
         {
-            var validator = new StatusValidator();
-            var validationResult = await validator.ValidateAsync(status);
-            if (!validationResult.IsValid) return BadRequest();
-            
             var orders = await _orderService.GetOrdersByStatusAsync(status);
             return Ok(orders);
         }
 
-        [HttpPatch("{orderId}/{newStatus}")]
+        [HttpPatch("{orderId:guid}/{status}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> UpdateOrderStatus([FromBody] UpdateOrderRequest request)
+        public async Task<IActionResult> UpdateOrderStatus([FromRoute] Guid orderId, [FromRoute] Model.OrderStatus status)
         {
-            var validator = new UpdateOrderRequestValidator();
-            var validationResult = await validator.ValidateAsync(request);
-            if (!validationResult.IsValid) return BadRequest();
-            
-            var order = await _orderService.UpdateOrderStatusAsync(request);
+            var order = await _orderService.UpdateOrderStatusAsync(orderId, status);
             if (order is null) return NotFound();
             
             return Ok(order);

@@ -10,7 +10,7 @@ namespace Order.Data
     {
         Task<IEnumerable<OrderSummary>> GetOrdersAsync();
         Task<IEnumerable<OrderSummary>> GetOrdersByStatusAsync(string status);
-        Task<OrderStatus> GetCreatedStatusAsync();
+        Task<Entities.OrderStatus> GetCreatedStatusAsync();
         Task<OrderDetail> GetOrderByIdAsync(Guid orderId);
         Task<OrderDetail> UpdateOrderStatusAsync(Guid orderId, string newStatusName);
         Task CreateOrderAsync(Order.Data.Entities.Order order);

@@ -212,7 +212,6 @@ namespace Order.Service.Tests
             Assert.AreEqual(1.8m, order.TotalPrice);
         }
 
-        // GetOrdersByStatusAsync Tests
         [Test]
         public async Task GetOrdersByStatusAsync_ReturnsOnlyOrdersWithMatchingStatus()
         {
@@ -220,13 +219,12 @@ namespace Order.Service.Tests
             await AddOrder(Guid.NewGuid(), 1); // Created status
 
             // Act
-            var orders = await _orderService.GetOrdersByStatusAsync(new StatusFilter{ Status = StatusFilterType.Created });
+            var orders = await _orderService.GetOrdersByStatusAsync(Model.OrderStatus.Created);
 
             // Assert
             Assert.IsTrue(orders.All(x => x.StatusName == "Created"));
         }
 
-        // UpdateOrderStatusAsync Tests
         [Test]
         public async Task UpdateOrderStatusAsync_UpdatesStatusCorrectly()
         {
@@ -234,10 +232,8 @@ namespace Order.Service.Tests
             var orderId = Guid.NewGuid();
             await AddOrder(orderId, 1);
 
-            var request = new UpdateOrderRequest { Id = orderId, Status = new StatusFilter{ Status = StatusFilterType.InProgress } };
-
             // Act
-            var order = await _orderService.UpdateOrderStatusAsync(request);
+            var order = await _orderService.UpdateOrderStatusAsync(orderId, Model.OrderStatus.InProgress);
 
             // Assert
             Assert.AreEqual("In Progress", order.StatusName);
@@ -250,16 +246,13 @@ namespace Order.Service.Tests
             var orderId = Guid.NewGuid();
             await AddOrder(orderId, 1);
 
-            var request = new UpdateOrderRequest { Id = orderId, Status = new StatusFilter{ Status = StatusFilterType.InProgress } };
-
             // Act
-            var order = await _orderService.UpdateOrderStatusAsync(request);
+            var order = await _orderService.UpdateOrderStatusAsync(orderId, Model.OrderStatus.InProgress);
 
             // Assert
             Assert.AreEqual(orderId, order.Id);
         }
 
-        // CalculateProfitByMonthAsync Tests
         [Test]
         public async Task CalculateProfitByMonthAsync_ReturnsCorrectProfit()
         {

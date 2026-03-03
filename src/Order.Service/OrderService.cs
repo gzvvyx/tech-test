@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Order.Model.DTO;
-using Order.Model.DTO.Extensions;
+using Order.Model.Extensions;
 
 namespace Order.Service
 {
@@ -30,15 +30,15 @@ namespace Order.Service
             return order;
         }
 
-        public async Task<IEnumerable<OrderSummary>> GetOrdersByStatusAsync(StatusFilter status)
+        public async Task<IEnumerable<OrderSummary>> GetOrdersByStatusAsync(OrderStatus status)
         {
-            var orders = await _orderRepository.GetOrdersByStatusAsync(status.ToString());
+            var orders = await _orderRepository.GetOrdersByStatusAsync(status.ToStatusName());
             return orders;
         }
 
-        public async Task<OrderDetail> UpdateOrderStatusAsync(UpdateOrderRequest request)
+        public async Task<OrderDetail> UpdateOrderStatusAsync(Guid orderId, OrderStatus status)
         {
-            var order = await _orderRepository.UpdateOrderStatusAsync(request.Id, request.Status.Status.ToStatusName());
+            var order = await _orderRepository.UpdateOrderStatusAsync(orderId, status.ToStatusName());
             return order;
         }
 

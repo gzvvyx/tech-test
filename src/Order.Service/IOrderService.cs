@@ -9,9 +9,9 @@ namespace Order.Service
     public interface IOrderService
     {
         Task<IEnumerable<OrderSummary>> GetOrdersAsync();
-        Task<IEnumerable<OrderSummary>> GetOrdersByStatusAsync(StatusFilter status);
+        Task<IEnumerable<OrderSummary>> GetOrdersByStatusAsync(OrderStatus status);
         Task<OrderDetail> GetOrderByIdAsync(Guid orderId);
-        Task<OrderDetail> UpdateOrderStatusAsync(UpdateOrderRequest request);
+        Task<OrderDetail> UpdateOrderStatusAsync(Guid orderId, OrderStatus status);
         Task<OrderDetail> CreateOrderAsync(CreateOrderRequest request);
         Task<IEnumerable<MonthlyProfit>> CalculateProfitByMonthAsync();
     }
