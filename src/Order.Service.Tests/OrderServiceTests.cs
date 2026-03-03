@@ -22,6 +22,7 @@ namespace Order.Service.Tests
 
         private readonly byte[] _orderStatusCreatedId = Guid.NewGuid().ToByteArray();
         private readonly byte[] _orderStatusCompletedId = Guid.NewGuid().ToByteArray();
+        private readonly byte[] _orderStatusInProgressId = Guid.NewGuid().ToByteArray();
         private readonly byte[] _orderStatusFailedId = Guid.NewGuid().ToByteArray();
         private readonly byte[] _orderServiceEmailId = Guid.NewGuid().ToByteArray();
         private readonly byte[] _orderProductEmailId = Guid.NewGuid().ToByteArray();
@@ -309,6 +310,7 @@ namespace Order.Service.Tests
             orderContext.OrderStatus.AddRange(
                 new OrderStatus { Id = _orderStatusCreatedId, Name = "Created" },
                 new OrderStatus { Id = _orderStatusCompletedId, Name = "Completed" },
+                new OrderStatus { Id = _orderStatusInProgressId, Name = "In Progress" },
                 new OrderStatus { Id = _orderStatusFailedId, Name = "Failed" }
             );
 
