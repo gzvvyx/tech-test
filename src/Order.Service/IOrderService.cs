@@ -2,13 +2,17 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Order.Model.DTO;
 
 namespace Order.Service
 {
     public interface IOrderService
     {
         Task<IEnumerable<OrderSummary>> GetOrdersAsync();
-        
+        Task<IEnumerable<OrderSummary>> GetOrdersByStatusAsync(OrderStatus status);
         Task<OrderDetail> GetOrderByIdAsync(Guid orderId);
+        Task<OrderDetail> UpdateOrderStatusAsync(Guid orderId, OrderStatus status);
+        Task<OrderDetail> CreateOrderAsync(CreateOrderDto dto);
+        Task<IEnumerable<MonthlyProfit>> CalculateProfitByMonthAsync();
     }
 }

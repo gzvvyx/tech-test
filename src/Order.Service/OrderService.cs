@@ -2,7 +2,10 @@
 using Order.Model;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using Order.Model.DTO;
+using Order.Model.Extensions;
 
 namespace Order.Service
 {
@@ -25,6 +28,52 @@ namespace Order.Service
         {
             var order = await _orderRepository.GetOrderByIdAsync(orderId);
             return order;
+        }
+
+        public async Task<IEnumerable<OrderSummary>> GetOrdersByStatusAsync(OrderStatus status)
+        {
+            var orders = await _orderRepository.GetOrdersByStatusAsync(status.ToStatusName());
+            return orders;
+        }
+
+        public async Task<OrderDetail> UpdateOrderStatusAsync(Guid orderId, OrderStatus status)
+        {
+            var order = await _orderRepository.UpdateOrderStatusAsync(orderId, status.ToStatusName());
+            return order;
+        }
+
+        public async Task<OrderDetail> CreateOrderAsync(CreateOrderDto dto)
+        {
+            var createdStatus = await _orderRepository.GetCreatedStatusAsync();
+            
+            var orderId = Guid.NewGuid();
+
+            var order = new Data.Entities.Order
+            {
+                Id = orderId.ToByteArray(),
+                ResellerId = dto.ResellerId.ToByteArray(),
+                CustomerId = dto.CustomerId.ToByteArray(),
+                StatusId = createdStatus.Id,
+                CreatedDate = DateTime.UtcNow,
+                Status = createdStatus,
+                Items = dto.OrderItems.Select(i => new Data.Entities.OrderItem
+                {
+                    Id = Guid.NewGuid().ToByteArray(),
+                    ProductId = i.ProductId.ToByteArray(),
+                    ServiceId =  i.ServiceId.ToByteArray(),
+                    OrderId = orderId.ToByteArray(),
+                    Quantity = i.Quantity
+                }).ToHashSet()
+            };
+            
+            await _orderRepository.CreateOrderAsync(order);
+
+            return await _orderRepository.GetOrderByIdAsync(orderId);
+        }
+
+        public async Task<IEnumerable<MonthlyProfit>> CalculateProfitByMonthAsync()
+        {
+            return await _orderRepository.CalculateProfitByMonthAsync();
         }
     }
 }

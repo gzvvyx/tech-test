@@ -8,6 +8,9 @@ services:
         - db
       links:
         - "db:database"
+      environment:
+        - OrderConnectionString=Server=db;Database=orders;User=root;Password=nmCsdkhj20n@Sa;SslMode=None;
+  
   db:
     image: mysql:5.7
     container_name: order-db

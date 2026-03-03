@@ -3,8 +3,10 @@ using Microsoft.AspNetCore.Mvc;
 using Order.Service;
 using System;
 using System.Threading.Tasks;
+using Order.Model.DTO;
+using Order.WebAPI.Validators;
 
-namespace OrderService.WebAPI.Controllers
+namespace Order.WebAPI.Controllers
 {
     [ApiController]
     [Route("orders")]
@@ -25,20 +27,58 @@ namespace OrderService.WebAPI.Controllers
             return Ok(orders);
         }
 
-        [HttpGet("{orderId}")]
+        [HttpGet("{orderId:guid}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetOrderById(Guid orderId)
+        public async Task<IActionResult> GetOrderById([FromRoute] Guid orderId)
         {
             var order = await _orderService.GetOrderByIdAsync(orderId);
-            if (order != null)
-            {
-                return Ok(order);
-            }
-            else
-            {
-                return NotFound();
-            }
+            if (order is null) return NotFound();
+
+            return Ok(order);
+        }
+        
+        [HttpGet("{status}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> GetOrdersByStatus([FromRoute] Model.OrderStatus status)
+        {
+            var orders = await _orderService.GetOrdersByStatusAsync(status);
+            return Ok(orders);
+        }
+
+        [HttpPatch("{orderId:guid}/{status}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UpdateOrderStatus([FromRoute] Guid orderId, [FromRoute] Model.OrderStatus status)
+        {
+            var order = await _orderService.UpdateOrderStatusAsync(orderId, status);
+            if (order is null) return NotFound();
+            
+            return Ok(order);
+        }
+
+        [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> CreateOrder([FromBody] CreateOrderDto dto)
+        {
+            var validator = new CreateOrderRequestValidator();
+            var validationResult = await validator.ValidateAsync(dto);
+            if (!validationResult.IsValid) return BadRequest();
+            
+            var response = await _orderService.CreateOrderAsync(dto);
+            return Ok(response);
+        }
+
+        [HttpGet("profit")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetProfit()
+        {
+            var profit = await _orderService.CalculateProfitByMonthAsync();
+            return Ok(profit);
         }
     }
 }
