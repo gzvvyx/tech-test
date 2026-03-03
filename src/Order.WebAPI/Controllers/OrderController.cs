@@ -29,6 +29,7 @@ namespace Order.WebAPI.Controllers
 
         [HttpGet("{orderId:guid}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetOrderById([FromRoute] Guid orderId)
         {
